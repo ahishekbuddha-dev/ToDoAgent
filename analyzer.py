@@ -77,7 +77,8 @@ RULES:
 - Email drafts should be ready to copy-paste and send — professional, warm, action-oriented.
 - Call talking points should give the CEO enough context to walk into the call confidently.
 - Be specific and contextual — never generic. Extract real details from the card data.
-- Keep the overall message within 3500 characters for WhatsApp delivery.
+- Use '---' as a separator between each TO DO item (this helps with message splitting).
+- Be thorough — cover all actionable cards. Do not truncate or skip cards to save space.
 """
 
 

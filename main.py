@@ -34,8 +34,8 @@ def run():
         message = generate_todo_list(board_data, today)
 
     print("Sending WhatsApp message...")
-    result = send_whatsapp_message(message)
-    print(f"WhatsApp message sent. Response: {result}")
+    results = send_whatsapp_message(message)
+    print(f"WhatsApp message sent. {len(results)} part(s) delivered.")
 
     # Also print the message for GitHub Actions logs
     print("\n--- Generated To-Do List ---")
