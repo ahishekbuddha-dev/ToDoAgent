@@ -21,7 +21,7 @@ def get_board_lists(board_id: str) -> list[dict]:
 
 
 def get_list_cards(list_id: str) -> list[dict]:
-    """Fetch all cards in a list with relevant fields."""
+    """Fetch all cards in a list with full detail."""
     url = f"{TRELLO_BASE_URL}/lists/{list_id}/cards"
     params = {
         **_auth_params(),
@@ -29,15 +29,38 @@ def get_list_cards(list_id: str) -> list[dict]:
         "members": "true",
         "member_fields": "fullName",
         "checklists": "all",
+        "attachments": "true",
+        "attachment_fields": "name,url",
     }
     resp = requests.get(url, params=params, timeout=30)
     resp.raise_for_status()
     return resp.json()
 
 
+def get_card_comments(card_id: str, limit: int = 10) -> list[dict]:
+    """Fetch recent comments/actions on a card."""
+    url = f"{TRELLO_BASE_URL}/cards/{card_id}/actions"
+    params = {
+        **_auth_params(),
+        "filter": "commentCard",
+        "limit": limit,
+    }
+    resp = requests.get(url, params=params, timeout=30)
+    resp.raise_for_status()
+    actions = resp.json()
+    return [
+        {
+            "author": a.get("memberCreator", {}).get("fullName", "Unknown"),
+            "date": a.get("date", ""),
+            "text": a.get("data", {}).get("text", ""),
+        }
+        for a in actions
+    ]
+
+
 def fetch_board_data(board_id: str, target_list_names: list[str]) -> dict:
     """
-    Fetch cards from specified lists on a board.
+    Fetch cards from specified lists on a board with full context.
 
     Args:
         board_id: Trello board ID.
@@ -53,30 +76,38 @@ def fetch_board_data(board_id: str, target_list_names: list[str]) -> dict:
     for lst in all_lists:
         if lst["name"].lower() in target_lower:
             cards = get_list_cards(lst["id"])
-            board_data[lst["name"]] = _simplify_cards(cards)
+            board_data[lst["name"]] = _enrich_cards(cards)
 
     return board_data
 
 
-def _simplify_cards(cards: list[dict]) -> list[dict]:
-    """Extract only the fields we need for analysis."""
-    simplified = []
+def _enrich_cards(cards: list[dict]) -> list[dict]:
+    """Extract all relevant fields and fetch comments for each card."""
+    enriched = []
     for card in cards:
-        checklist_summary = []
+        checklist_details = []
         for cl in card.get("checklists", []):
-            total = len(cl.get("checkItems", []))
-            done = sum(1 for item in cl.get("checkItems", []) if item["state"] == "complete")
-            checklist_summary.append({"name": cl["name"], "done": done, "total": total})
+            items = []
+            for item in cl.get("checkItems", []):
+                items.append({"name": item["name"], "done": item["state"] == "complete"})
+            checklist_details.append({"name": cl["name"], "items": items})
 
-        simplified.append({
+        comments = get_card_comments(card["id"])
+
+        enriched.append({
             "name": card["name"],
-            "description": card.get("desc", "")[:300],
+            "description": card.get("desc", ""),
             "due": card.get("due"),
             "due_complete": card.get("dueComplete", False),
             "labels": [l["name"] for l in card.get("labels", []) if l.get("name")],
             "members": [m["fullName"] for m in card.get("members", [])],
-            "checklists": checklist_summary,
+            "checklists": checklist_details,
+            "comments": comments,
+            "attachments": [
+                {"name": a.get("name", ""), "url": a.get("url", "")}
+                for a in card.get("attachments", [])
+            ],
             "url": card.get("shortUrl", ""),
             "last_activity": card.get("dateLastActivity", ""),
         })
-    return simplified
+    return enriched
