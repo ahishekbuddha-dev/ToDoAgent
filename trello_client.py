@@ -76,12 +76,12 @@ def fetch_board_data(board_id: str, target_list_names: list[str]) -> dict:
     for lst in all_lists:
         if lst["name"].lower() in target_lower:
             cards = get_list_cards(lst["id"])
-            board_data[lst["name"]] = _enrich_cards(cards)
+            board_data[lst["name"]] = _enrich_cards(cards, lst["name"])
 
     return board_data
 
 
-def _enrich_cards(cards: list[dict]) -> list[dict]:
+def _enrich_cards(cards: list[dict], list_name: str) -> list[dict]:
     """Extract all relevant fields and fetch comments for each card."""
     enriched = []
     for card in cards:
@@ -96,6 +96,7 @@ def _enrich_cards(cards: list[dict]) -> list[dict]:
 
         enriched.append({
             "name": card["name"],
+            "stage": list_name,
             "description": card.get("desc", ""),
             "due": card.get("due"),
             "due_complete": card.get("dueComplete", False),
