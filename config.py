@@ -8,7 +8,12 @@ TRELLO_BOARD_ID = os.environ.get("TRELLO_BOARD_ID", "")
 # Update these to match your Trello board's list names exactly.
 # ---------------------------------------------------------------
 TARGET_LIST_NAMES = [
-    "To Do",
-    "In Progress",
-    "Blocked",
+    "S2 - Warm Clients",
+    "S3 - Qualified",
+    "S4 - Assessment",
+    "S5 - POC / Proposal prep",
+    "S6 - POC Success/Proposal Eval",
+    "S7 - Commericals Discussion",
+    "S8 - Closure",
+
 ]
