@@ -1,10 +1,7 @@
 name: Daily Trello To-Do
 
 on:
-  schedule:
-    # 8:00 AM IST = 2:30 AM UTC
-    - cron: "30 2 * * *"
-  workflow_dispatch: # Allow manual trigger for testing
+  workflow_dispatch: # Triggered by Cloudflare Worker webhook
 
 jobs:
   send-todo:
